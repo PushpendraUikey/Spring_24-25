@@ -5,7 +5,7 @@
 #include<sys/wait.h>
 
 // execlp: l suggests that arguments to be put in the form of strings with last argument being NULL
-// execvp: v suggests that arguments to be put in the form of array of pointers with NULL termination.
+// execvp: v suggests that arguments to be put in the form of array with NULL termination.[pointer to it is fine]
 
 int main(int argc, char* argv[]){
 	int rc = fork();
@@ -13,8 +13,7 @@ int main(int argc, char* argv[]){
 	if(rc==0){
 		printf("Hello, I am child (pid:%d)\n", (int)getpid());
 
-		// another way
-		execlp("ls", "ls","-l", NULL);
+		execlp("ls", "ls","-l", NULL);	// p tells the shell to find the executable in the path given in $PATH var
 
 		// One way
 		// execl("/bin/ls","ls", NULL);

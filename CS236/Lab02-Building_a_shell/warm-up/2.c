@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
     }
     else {
         int status;
-        int ret = waitpid(pid, &status, 0); // waits for child to terminate[waitpid is used to keep track of status]
+        int ret = waitpid(pid, &status, 0); // waits for specific child to terminate[waitpid is used to keep track of status]
 
         printf("I'm the parent process with (PID: %d)\n", (int)getpid());
         if(ret>0){

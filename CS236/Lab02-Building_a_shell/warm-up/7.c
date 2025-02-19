@@ -1,32 +1,3 @@
-// #include <stdlib.h>
-// #include <stdio.h>
-// #include <unistd.h>
-// #include <string.h>
-// #include <sys/types.h>
-// #include <signal.h>
-// #include <sys/wait.h>
-
-
-// int main(int argc, char* argv[]){
-//     pid_t pid = fork();
-
-//     if(pid < 0){
-//         perror("Fork Failed!!\n");
-//         exit(EXIT_FAILURE);
-//     }
-//     else if(pid == 0){
-//         sleep(10);  // sleep the child process for longer time execution
-//     }else{
-//         int child = wait(&pid);
-//         if(child>0){
-//             printf("Child process(pid:%d) successfully executed for current process(pid:%d)\n", child, (int)getpid());
-//         }
-//     }
-// }
-
-
-// CHATGPT!!!
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -39,11 +10,11 @@ void handle_sigchld(int sig) {
     pid_t pid;
     int status;
 
-    // Reap the child process
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        if (WIFEXITED(status)) {
+    // Reap the child process   [-1 is for any child terminated reap that.]
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) { // if no child died written immediately[don't wait]
+        if (WIFEXITED(status)) {    // True if normal exit() 
             printf("Child process (PID: %d) exited with status %d.\n", pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
+        } else if (WIFSIGNALED(status)) {   // true if killed by signal
             printf("Child process (PID: %d) was terminated by signal %d.\n", pid, WTERMSIG(status));
         }
     }

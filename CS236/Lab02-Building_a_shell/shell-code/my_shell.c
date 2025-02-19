@@ -50,17 +50,17 @@ void handle_sigint(int sig){
 int main(int argc, char* argv[]) {
 	char  line[MAX_INPUT_SIZE];            
 	char  **tokens;
-	char **__multiexec[MAX_MULTI_COMMANDS];
+	char **XX__multiexec[MAX_MULTI_COMMANDS];
 	for (int i = 0; i < MAX_MULTI_COMMANDS; i++) {
-		__multiexec[i] = (char **)malloc(MAX_MULTI_COMMANDS * sizeof(char *));
+		XX__multiexec[i] = (char **)malloc(MAX_MULTI_COMMANDS * sizeof(char *));
 	}
 
-	int __multisize = 0;
-	bool ismulti = false;
+	int XX__multisize = 0;
+	bool XX__ismulti = false;
 	int i;
 
 	int period = 0;
-	signal(SIGINT, handle_sigint);
+	signal(SIGINT, handle_sigint);	// This also preventing the our shell to not exit
 	while(1) {			
 		/* BEGIN: TAKING INPUT */
 
@@ -88,19 +88,47 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 
+		// This can be implemented if we use a Data Structure to hold the pid's of each child processes
+		// We have to have maxchild number to store in the fixed sized array.
+
+		// if (strcmp(tokens[0], "exit") == 0) {
+		// 	pid_t pid = getpid();   // Get the shell's PID
+		// 	printf("Exiting shell.\n");
+
+		// 	for (i = 0; i < max_child_count; i++) { // Terminate and reap all child processes
+		// 		if (child_pids[i] > 0 && child_pids[i] != pid) {
+		// 			kill(child_pids[i], SIGTERM); // Terminate each child process explicitly
+		// 		}
+		// 	}
+		// 	// Reap all terminated child processes
+		// 	int wc;
+		// 	while ((wc = waitpid(-1, NULL, WNOHANG)) > 0) { 
+		// 		printf("Shell: Background process finished with pid %d\n", wc);
+		// 	}
+
+		// 	// Free dynamically allocated memory
+		// 	for (i = 0; tokens[i] != NULL; i++) {
+		// 		free(tokens[i]);
+		// 	}
+		// 	free(tokens);
+
+		// 	break; // Exit the shell
+		// }
+
   		if (strcmp(tokens[0], "exit") == 0) {
             int wc;
-						kill(0, SIGTERM);	// kill the processes which are running in the background, foreground as child of the curr group.
-			// -1 in place of pid: any process waiting to be reaped(i.e. it is in zombie state gets reaped)
-					while ((wc = waitpid(-1, NULL, 0)) > 0) {	// reaping all the foreground and background process
-							printf("Shell: Background process finished with pid %d\n", wc);
-					}
-					for(i=0;tokens[i]!=NULL;i++){
-						free(tokens[i]);
-					}
-					free(tokens);
-					printf("Exiting shell.\n");
-					break;
+			// kill(0, SIGTERM);// Not good as terminates entire group of current process including self.
+			// -1 in place of pid: any process waiting to be reaped
+				while ((wc = waitpid(-1, NULL, 0)) > 0) {	// reaping all the foreground and background process
+					// It'll wait for each child to finish until none left.
+						printf("Shell: Background process finished with pid %d\n", wc);
+				}
+				for(i=0;tokens[i]!=NULL;i++){
+					free(tokens[i]);
+				}
+				free(tokens);
+				printf("Exiting shell.\n");
+				break;
 			}
 
 		// background process check
@@ -109,23 +137,23 @@ int main(int argc, char* argv[]) {
 		int k=0;
         for (lastIndex = 0; tokens[lastIndex] != NULL; lastIndex++){
 					if(strcmp(tokens[lastIndex], "&&")==0){
-						__multiexec[__multisize++][k] = NULL;
-						ismulti = true;
+						XX__multiexec[XX__multisize++][k] = NULL;
+						XX__ismulti = true;
 						k = 0;
 					}else{
-						__multiexec[__multisize][k] = strdup(tokens[lastIndex]);
+						XX__multiexec[XX__multisize][k] = strdup(tokens[lastIndex]);
 						k++;
 					}
 				}
-				__multiexec[__multisize++][k] = NULL;		// Last one make NULL terminated
+				XX__multiexec[XX__multisize++][k] = NULL;		// Last one make NULL terminated
 
-		if(ismulti){
-			for(int j=0; j<__multisize; j++){
+		if(XX__ismulti){
+			for(int j=0; j<XX__multisize; j++){
 				// cd command processing
-				if (__multiexec[j][0] != NULL && strcmp(__multiexec[j][0], "cd") == 0) {
-					if (__multiexec[j][1]== NULL) {
+				if (XX__multiexec[j][0] != NULL && strcmp(XX__multiexec[j][0], "cd") == 0) {
+					if (XX__multiexec[j][1]== NULL) {
 						printf("Error: No directory specified.\n");
-					} else if (chdir(__multiexec[j][1]) < 0) {
+					} else if (chdir(XX__multiexec[j][1]) < 0) {
 						perror("Error: No such directory exists.\n"); 
 					}
 					continue;
@@ -134,10 +162,11 @@ int main(int argc, char* argv[]) {
 				int rc = fork();
 				if(rc==0){
 					// if(runInBackground) signal(SIGINT, handle_sigint); //if it is a background process then suppress ctrl+c
-					execvp(__multiexec[j][0], __multiexec[j]);
-					perror("Invalid command!\n");
+					execvp(XX__multiexec[j][0], XX__multiexec[j]);
+					printf("%s: Invalid command!\n", XX__multiexec[j][0]);
 					exit(EXIT_FAILURE);
 				}else if(rc>0){
+					// each parent process has to wait for the child to be reaped.
 					int wc = waitpid(rc, NULL, 0);
 				}
 			}
@@ -145,8 +174,8 @@ int main(int argc, char* argv[]) {
 				free(tokens[i]);
 			}
 			free(tokens);
-			__multisize = 0;
-			ismulti = false;	// Reset for new command
+			XX__multisize = 0;
+			XX__ismulti = false;	// Reset for new command
 		}
 
 		else
@@ -164,7 +193,7 @@ int main(int argc, char* argv[]) {
 				if (tokens[1] == NULL) {
 					printf("Error: No directory specified.\n");
 				} else if (chdir(tokens[1]) < 0) {
-					perror("Error: No such directory exists.\n"); 
+					printf("Error: <%s> No such directory exists.\n", tokens[1]); 
 				}
 				continue;
 			}
@@ -173,19 +202,19 @@ int main(int argc, char* argv[]) {
 			if(rc==0){
 				if(runInBackground) signal(SIGINT, handle_sigint);// if it is a background process then suppress cntrl+c
 				execvp(tokens[0], tokens);
-				perror("Invalid command!\n");
+				printf("%s: Invalid command!\n", tokens[0]);
 				exit(EXIT_FAILURE);
 			}else if(rc>0){
 				if(!runInBackground){		// if running in the background then don't wait!
 					int wc = waitpid(rc, NULL, 0);
 				}
 			}
-			if(period%2==0){			// reaping the zombie processess periodically!
+			if(period%5==0){			// reaping the zombie processess periodically!
 				int wc;
 			// WNOHANG: it actually allows waitpid to not wait for any child to become zombie but it 
 			// immediately returns zero if no process is in zombie state. [ i.e. it won't wait for the processes which are running in the background]
 				if((wc = waitpid(-1, NULL, WNOHANG)) > 0) {	
-					printf("Shell: Background process finished with pid %d\n", wc);
+					printf("Shell: Background process reaped with pid %d\n", wc);
 				}
 			}
 			period++;
@@ -196,18 +225,18 @@ int main(int argc, char* argv[]) {
 			}
 			free(tokens);
 
-			__multisize = 0;
-			ismulti = false;
+			XX__multisize = 0;
+			XX__ismulti = false;
 		}
 	}
 
 	// In the end free up everything the memorie's taken and exit the shell.
 	for (i = 0; i < MAX_MULTI_COMMANDS; i++) {
-		if (__multiexec[i] != NULL) {
-			for (int j = 0; __multiexec[i][j] != NULL; j++) {
-				free(__multiexec[i][j]);
+		if (XX__multiexec[i] != NULL) {
+			for (int j = 0; j < MAX_MULTI_COMMANDS; j++) {
+				if(XX__multiexec[i][j] != NULL) free(XX__multiexec[i][j]);	// free up everything allocated
 			}
-			free(__multiexec[i]);
+			free(XX__multiexec[i]);
 		}
 	}
 	return 0;

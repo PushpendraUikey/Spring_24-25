@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
         }else if(pid == 0){
             printf("Child %d with pid:%d and parent pid:%d\n", i+1, (int)getpid(), (int)getppid());
-            exit(EXIT_SUCCESS);
+            exit(EXIT_SUCCESS);    // This exit causes child to return from here and don't move further.
         }
     }
 

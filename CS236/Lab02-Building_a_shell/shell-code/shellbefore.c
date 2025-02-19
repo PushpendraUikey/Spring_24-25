@@ -1,10 +1,12 @@
-#include  <stdio.h>
-#include  <sys/types.h>
+#include <stdio.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
+
+// This version was stored as a backup to the original 
 
 #define MAX_INPUT_SIZE 1024
 #define MAX_TOKEN_SIZE 64
@@ -13,9 +15,10 @@
 /* Splits the string by space and returns the array of tokens
 *
 */
+// Token generator
 char **tokenize(char *line)
-{
-  char **tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
+{				 // malloc() returns a pointer type-cast it!
+  char **tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));	// have to clean the memory manually
   char *token = (char *)malloc(MAX_TOKEN_SIZE * sizeof(char));
   int i, tokenIndex = 0, tokenNo = 0;
 
@@ -36,7 +39,7 @@ char **tokenize(char *line)
   }
  
   free(token);
-  tokens[tokenNo] = NULL ;
+  tokens[tokenNo] = NULL ;	// Null terminated array
   return tokens;
 }
 
@@ -53,7 +56,7 @@ int main(int argc, char* argv[]) {
 	int i;
 
 	int period = 0;
-	signal(SIGINT, handle_sigint);
+	signal(SIGINT, handle_sigint);	// Suppressing the signal cntrl+c
 	while(1) {			
 		/* BEGIN: TAKING INPUT */
 
@@ -66,8 +69,8 @@ int main(int argc, char* argv[]) {
 		}else{
 			printf("$ ");
 		}
-		scanf("%[^\n]", line);
-		getchar();
+		scanf("%[^\n]", line);//Reads all charachters until a newline is encountered.
+		getchar();// this effectively reads the last newline charachter.
 
 		/* END: TAKING INPUT */
 
@@ -86,7 +89,8 @@ int main(int argc, char* argv[]) {
 			// -1 in place of pid: any process waiting to be reaped(i.e. it is in zombie state gets reaped)
 			// WNOHANG: it actually allows waitpid to not wait for any child to become zombie but it 
 			// immediately returns zero if no process is in zombie state.
-            while ((wc = waitpid(-1, NULL, WNOHANG)) > 0) {	// reaping all the foreground and background process
+			//while ((wc = waitpid(-1, NULL, WNOHANG)) > 0);
+            while ((wc = wait(NULL)) > 0) {	// there's no direct method to kill all the child unless you know their pid
                 printf("Shell: Background process finished with pid %d\n", wc);
             }
             printf("Exiting shell.\n");
@@ -111,15 +115,15 @@ int main(int argc, char* argv[]) {
         if (strcmp(tokens[lastIndex], "&") == 0) {
             runInBackground = 1;
             free(tokens[lastIndex]);
-            tokens[lastIndex] = NULL; 	// Remove '&' from the tokens
+            tokens[lastIndex] = NULL; 	// Remove '&' from the tokens(Null Termination)
         }
 
 		// cd command processing
-		if (tokens[0] != NULL && strcmp(tokens[0], "cd") == 0) {
+		if (strcmp(tokens[0], "cd") == 0) {
             if (tokens[1] == NULL) {
                 printf("Error: No directory specified.\n");
             } else if (chdir(tokens[1]) < 0) {
-                perror("Error: No such directory exists.\n"); 
+                perror("Error: No such directory exists.\n");
             }
             continue;
         }

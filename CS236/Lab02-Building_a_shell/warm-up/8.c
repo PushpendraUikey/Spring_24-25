@@ -13,7 +13,8 @@ void handle_sigint(int sig){
 }
 int main(int argc, char* argv[]){
 
-    signal(SIGINT, handle_sigint);
+    // suppresses cntrl+C of both parent and child
+    signal(SIGINT, handle_sigint);      // cntrl+c signal handler it is!
     pid_t pid = fork();
 
     if(pid < 0){
@@ -27,14 +28,14 @@ int main(int argc, char* argv[]){
         }
     }else{
         int i=0;
-        while(i<15){
+        while(i<5){
             printf("Keep trying to kill the child.\n");
             i+=1;
             sleep(500000);
         }
         printf("Killing the child with pid %d\n", pid);
-        kill(pid, SIGKILL);
-        wait(NULL);     // reap the parent
+        kill(pid, SIGKILL);     // This one causes the kill of child forcefully[can't be caught or overwritten]
+        wait(NULL);             // reap the child
 
         printf("Done with the parent as well.\n");
     }

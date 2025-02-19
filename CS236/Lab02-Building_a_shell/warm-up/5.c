@@ -4,9 +4,6 @@
 #include <unistd.h>
 #include <string.h>
 
-// There is this doubt about the following activity:
-// why isn't pipeline working here.
-
 int main(int argc, char* argv[]){
 
     if(argc == 1){
