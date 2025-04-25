@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "zemaphore.h": "c",
+        "iostream": "cpp"
+    }
+}
